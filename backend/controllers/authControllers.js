@@ -125,5 +125,16 @@ exports.signup = async(req,res) => {
                 message: 'Contraseña incorrecta'
             });
         }
+
+        //Generar token jwt 24h
+        const token = jwt.sign (
+            {
+                id:user._id,
+                role: user.role,
+                email:user.email
+            },
+            config.secret,
+            {expiresIn: config.jwtExpiration}
+        );
     }
 }
