@@ -136,5 +136,27 @@ exports.signup = async(req,res) => {
             config.secret,
             {expiresIn: config.jwtExpiration}
         );
+
+        //prepara  respuestas sin mostrar la contraseña
+        const UserResponse ={
+            id: user._id,
+            username: user.UserResponse,
+            email: user.email,
+            password: user.password
+        };
+
+        res.status(200).json({
+            success:false,
+            message: 'inicio de sesion exitoso',
+            token : token ,
+            user: UserResponse
+        });
+
+    } catch (error){
+        return res.status(500).json({
+            success:false,
+            message : 'Error al iniciar sesion',
+            error : error.message
+        })
     }
 }
