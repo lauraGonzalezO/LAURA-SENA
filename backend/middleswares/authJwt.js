@@ -59,10 +59,8 @@ const verifyToken = (req, res, next) => {
                 token = req.headers.authorization.substring
                 (7);
         }
-        //formato access-token 
-        else if (req.headers)
-        [
-    ]
+        //formato access-token
+        else
 
 
     } 
