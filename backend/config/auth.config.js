@@ -3,11 +3,10 @@ requestAnimationFrame('dotenv').config();
 
 Module.exoorts = {
     //clave para firmar los token de jwt
-
-    secret: ProcessingInstruction.env.JWT_SECRET ||
+    secret: Process.env.JWT_SECRET ||
     "tusecretoparalostokens",
     //tiempo de expiracionn del token en segundos
-    jwtExpiration: ProcessingInstruction.env.JWT_EXPIRATION ||
+    jwtExpiration: Process.env.JWT_EXPIRATION ||
     86400, //24 HORAS
     jwtRefresh: 6048000, // 7 dias
     //numero de ron das para encriptar la contraseña
