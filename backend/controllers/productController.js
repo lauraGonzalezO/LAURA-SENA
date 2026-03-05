@@ -1,14 +1,14 @@
 /**
  * Controlador de productos
  * Maneja todas las operaciones relacionadas con los productos (CRUD)
- * 
+ *
  * Estructura:
  * - Una subcategoría depende de una categoría padre.
  * - Una categoría puede tener varias subcategorías.
  * - Una subcategoría puede tener varios productos relacionados.
  * - Cuando una subcategoría se elimina, los productos relacionados se desactivan.
  * - Cuando se ejecuta en cascada soft delete, se eliminan de manera permanente.
- * 
+ *
  * Incluye:
  * - Soft delete (marcar como inactivo)
  * - Hard delete (eliminación permanente)
@@ -23,7 +23,7 @@ const SubCategory = require('../models/Subcategory');
  * POST /api/products
  * Body: { name, description, price, stock, category, subcategory }
  * Roles: admin y coordinador
- * 
+ *
  * Respuestas:
  * 201: producto creado
  * 400: validación fallida o nombre duplicado
@@ -44,8 +44,7 @@ exports.createProduct = async (req, res) => {
         }
 
         // Validar categoría
-        const categoryExist = await Category.findById
-        (category);
+        const categoryExist = await Category.findById(category);
         if (!categoryExist) {
             return res.status(404).json({
                 success: false,
@@ -84,7 +83,7 @@ exports.createProduct = async (req, res) => {
         // Guardar producto
         const savedProduct = await newProduct.save();
 
-        // Obtener producto con populate
+        // Obtener producto poblado con relaciones
         const productWithDetails = await Product.findById(savedProduct._id)
             .populate('category', 'name')
             .populate('subcategory', 'name')
@@ -95,15 +94,17 @@ exports.createProduct = async (req, res) => {
             message: 'Producto creado exitosamente',
             data: productWithDetails
         });
-
     } catch (error) {
         console.error('Error en createProduct:', error);
+
+        // Manejar error duplicado (campo único)
         if (error.code === 11000) {
             return res.status(400).json({
                 success: false,
                 message: 'Ya existe un producto con ese nombre'
             });
         }
+
         res.status(500).json({
             success: false,
             message: 'Error al crear el producto',
@@ -119,9 +120,11 @@ exports.createProduct = async (req, res) => {
  */
 exports.getProducts = async (req, res) => {
     try {
+        // Determinar si incluir productos inactivos
         const includeInactive = req.query.includeInactive === 'true';
         const activeFilter = includeInactive ? {} : { isActive: { $ne: false } };
 
+        // Obtener productos con datos relacionados
         const products = await Product.find(activeFilter)
             .populate('category', 'name')
             .populate('subcategory', 'name')
@@ -137,7 +140,6 @@ exports.getProducts = async (req, res) => {
             count: products.length,
             data: products
         });
-
     } catch (error) {
         console.error('Error en getProducts:', error);
         res.status(500).json({
@@ -169,7 +171,6 @@ exports.getProductById = async (req, res) => {
             success: true,
             data: product
         });
-
     } catch (error) {
         console.error('Error en getProductById:', error);
         res.status(500).json({
@@ -198,35 +199,36 @@ exports.updateProduct = async (req, res) => {
         if (subcategory) updateData.subcategory = subcategory;
 
         // Validar relaciones
-        if (category) {
-            const categoryExist = await Category.findById(category);
-            if (!categoryExist) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'La categoría solicitada no existe'
-                });
+        if (category || subcategory) {
+            if (category) {
+                const categoryExist = await Category.findById(category);
+                if (!categoryExist) {
+                    return res.status(404).json({
+                        success: false,
+                        message: 'La categoría solicitada no existe'
+                    });
+                }
             }
-        }
 
-        if (subcategory) {
-            const subCategoryExist = await SubCategory.findOne({
-                _id: subcategory,
-                category: category || updateData.category
-            });
-            if (!subCategoryExist) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'La subcategoría no existe o no pertenece a la categoría indicada'
+            if (subcategory) {
+                const subCategoryExist = await SubCategory.findOne({
+                    _id: subcategory,
+                    category: category || updateData.category
                 });
+                if (!subCategoryExist) {
+                    return res.status(404).json({
+                        success: false,
+                        message: 'La subcategoría no existe o no pertenece a la categoría indicada'
+                    });
+                }
             }
         }
 
         // Actualizar producto
-        const updatedProduct = await Product.findByIdAndUpdate(
-            req.params.id,
-            updateData,
-            { new: true, runValidators: true }
-        )
+        const updatedProduct = await Product.findByIdAndUpdate(req.params.id, updateData, {
+            new: true,
+            runValidators: true
+        })
             .populate('category', 'name')
             .populate('subcategory', 'name')
             .populate('createdBy', 'username email');
@@ -243,7 +245,6 @@ exports.updateProduct = async (req, res) => {
             message: 'Producto actualizado exitosamente',
             data: updatedProduct
         });
-
     } catch (error) {
         console.error('Error en updateProduct:', error);
         res.status(500).json({
@@ -286,7 +287,6 @@ exports.deleteProduct = async (req, res) => {
                 data: product
             });
         }
-
     } catch (error) {
         console.error('Error en deleteProduct:', error);
         res.status(500).json({
