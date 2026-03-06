@@ -25,8 +25,7 @@ validacion del token
 */
 
 const jwt = require('jsonwebtoken');
-const User = require('../models/user.model');
-const { cloneElement } = require('react');
+const config = require('../config/auth.config');
 
 /*
 verificar token
@@ -69,8 +68,7 @@ const verifyTokenFn = (req, res, next) => {
         if (!token) {
             return res.status(403).json({
                 success: false,
-                message: 'Token de autenticación requerido',
-                details: 'Incluye Authorization'
+                message: 'Token de autenticación requerido no encontrado',
             });
         }
         // verificar token con la clave secreta 

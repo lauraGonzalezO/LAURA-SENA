@@ -29,15 +29,16 @@ const bcrypt = require('bcrypt');
 exports.getAllUsers = async (req, res) => {
     try {
         const includeInactive = req.query.inactive === 'true';
-        const activeFilter = includeInactive ? {} : { active: { $ne: false } };
+        const activeFilter = includeInactive ? {} : 
+        { active: { $ne: false } };
 
         let users;
-
+        //control de acceso basado en el rol 
         if (req.user.role === 'auxiliar') {
             // Los auxiliares solo pueden ver su propio perfil
             users = await User.find({ _id: req.user._id, ...activeFilter }).select('-password');
         } else {
-            // Los demás pueden ver todos los usuarios filtrados
+            // Los admin y coordinadores pueden ver todos los usuarios 
             users = await User.find(activeFilter).select('-password');
         }
 
@@ -89,7 +90,7 @@ exports.getUserById = async (req, res) => {
             data: user
         });
     } catch (error) {
-        console.error('[CONTROLLER] Error en getUserById:', error.message);
+        console.error('Error en getUserById:', error);
         res.status(500).json({
             success: false,
             message: 'Error al obtener usuario específico'
@@ -114,6 +115,7 @@ exports.createUser = async (req, res) => {
             role
         });
 
+        //Guardar en base de datos
         const savedUser = await newUser.save();
 
         res.status(201).json({
@@ -214,6 +216,7 @@ exports.deleteUser = async (req, res) => {
         }
 
         if (isHardDelete) {
+            //eliminar permanentemente
             await User.findByIdAndDelete(req.params.id);
             res.status(200).json({
                 success: true,
@@ -221,6 +224,7 @@ exports.deleteUser = async (req, res) => {
                 data: userToDelete
             });
         } else {
+            //soft delete para eliminar usuario
             userToDelete.active = false;
             await userToDelete.save();
             res.status(200).json({
@@ -232,7 +236,7 @@ exports.deleteUser = async (req, res) => {
         console.error('Error en deleteUser:', error);
         res.status(500).json({
             success: false,
-            message: 'Error al eliminar usuario',
+            message: 'Error al desactivar el usuario',
             error: error.message
         });
     }
