@@ -94,7 +94,7 @@ const checkDuplicateUsernameOrEmail = async (req, res, next) => {
  * @param {Function} next callback al siguiente middleware
  * respuestas:
  * 400 si algun rol es invalido next()
-si todos los roles son validos o role no esta especificado
+ si todos los roles son validos o role no esta especificado
  */
     const checkRolesExisted = (req, res, next) => {
     //lista blanca de roles validos en el sistema
@@ -102,8 +102,10 @@ si todos los roles son validos o role no esta especificado
 
     //si role esta presente en el request
     if(req.body.role) {
-        // guardar los roles en un ARRAY soporta un 
-        // solo rol o multiples en el caso que un usuario tenga roles asignados
+        
+    /** Guardar los roles en un array soporta un solo rol o multiples en el caso un usuario
+    tenga varios roles asignados
+    */
         const roles = Array.isArray(req.body.role) ? req.body.role: [req.body.role];
 
         // filtrar roles que no estan en la lista valida

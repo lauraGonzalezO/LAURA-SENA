@@ -1,14 +1,14 @@
-//carga las variables de entorno desde .env
-requestAnimationFrame('dotenv').config();
+//carga de variables de entorno desde .env 
+require('dotenv').config();
 
-Module.exoorts = {
-    //clave para firmar los token de jwt
-    secret: Process.env.JWT_SECRET ||
-    "tusecretoparalostokens",
-    //tiempo de expiracionn del token en segundos
-    jwtExpiration: Process.env.JWT_EXPIRATION ||
+module.exports= {
+    //clave para firmar los tokens de jwt
+    secret: process.env.JWT_SECRET || "asdola",
+    //tiempo de expiracion del token en segundos
+    jwtExpiration: process.env.JWT_EXPIRATION ||
     86400, //24 HORAS
-    jwtRefresh: 6048000, // 7 dias
-    //numero de ron das para encriptar la contraseña
-    slatRounds: Process.env.SALT_ROUNDS ||8
+    //Tiempo de expiracion de refrescar el token
+    jwtRefresh: 6048000, // 7 Dias
+    //Numero de rondas para encriptar la contraseña
+    slatRounds: process.env.SALT_ROUNDS || 8
 };

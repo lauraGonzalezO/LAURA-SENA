@@ -37,7 +37,7 @@ const userRoutes = require('./routes/userRoutes');
 const productRoutes = require('./routes/productRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const subcategoryRoutes = require('./routes/subcategoryRoutes');
-const statisticsRoutes = require('./routes/statisticsRouter');
+const statisticsRoutes = require('./routes/statisticsRoutes');
 
 
 const app = express();

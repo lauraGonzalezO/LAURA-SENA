@@ -1,48 +1,48 @@
 /**
- * modelo de subcategoria MONGODB
- * define la estructura de la subcategoria
+ * Modelo de subcategoria MONGODB
+ * Define la estructura de la subcategoria
  * la subcategoria depende de una categoria
- * muchos productos pueden pertenecer a una subcategoria
- * mcuhas subcategorias dependen de una sola categoria
-*/
+ * muchos productos pueden perteneces a una subcategoria
+ * muchas subcategorias dependen de una sola categoria
+ */
 
 const mongoose =require('mongoose');
 
-//campos de sub categoria
+//Campos de subcategoria
+
 const subcategorySchema = new mongoose.Schema({
+    //nombre de la subcategoria unico y requerido
     name:{
         type: String,
-        require: [true, 'el nombre es obligatgordio'],
-        unique: true,// no pueden haver sub cateogrias con el mismo nombre
-        trim: true //eliminar espacio al inicio y al final
+        require: [true, 'El nombre es obligatorio'],
+        unique: true, // no pueden haber dos subcategorias con el mismo nombre
+        trim: true // eliminar espacion al inicio y final
     },
-
-    // descripccion de la subcategoria - requerida
-    description:{
-        type: String,
-        require: [true, 'la descripcion es requerida'],
-        trim: true //elim
+    
+    //Descripcion de la subcategoria - requerida
+    description: {
+            type: String,
+            require: [true, 'La descripcion es requerida'],
+            trim: true
     },
-
-    //categoria padre esta subcateogria pertenece a una categoria 
-    //relacion 1 - muchos una categoria puede tener muchas subcategorias
+    
+    //Categoria padre, esta subcategoria pertenece a una categoria 
+    //relacion 1 - muchos. Una categoria puede tener muchas subcategorias
 
     category: {
-        type: mongoose.Schema.types.ObjectId,
-        ref: 'category', //puede ser poblado con .populate('category')
-
-        required: [true, 'la categoria ees requerida']
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Category', // puede ser poblado con .populate ('category')
+        required: [true, 'La categoria es requerida']
     },
 
-
-    //active, desactiva las subcategorias pero no las elimina
+    //Active, desactiva la subcategoria pero no la elimina
     active: {
-        type: Boolean, //agrega, createdAt y udpatedAt automaticamente
-        default: true, //no iniciar campos _v
+        type: Boolean,
+        default: true,
     }
-
-}, { timestamps: true, //
-    versinoKey:false,
+}, {
+    timestamps: true, // agrega createdAt y updateAt automaticamente
+    versinoKey: false, // no incluir campos __V
 });
 
 /**
@@ -58,32 +58,23 @@ const subcategorySchema = new mongoose.Schema({
  * ignora errores si el indice no existe
  * continua con el guardado normal
  */
-subcategorySchema.post('save',function (error, doc,next){
-
-    //verificar si es un error de mongoDB por violacion de indice unico
-
-     if (error.name==='MongoServerError'&& error.code === 1000) {
-        next(new Error('ya no existe una subcategoria con ese nombre'));
-     } else { 
-        //pasar el error tal como es 
-        next(error);
+subcategorySchema.post('save', function(error, doc, next) {
+        //veruficar si es error de mongoDB por violacion de indice unico
+    if (error.name === 'MongoServerError' && error.code === 1000){
+            next(new Error('Ya existe una subcategoria con ese nombre'));
+        
+    } else {
+    // pasar el error tal como es
+    next(error);
     }
 });
 
 /**
- * 
  * crear indice unico
  * 
- * mongo rechaza cualquier intento de interta<r  o actualizar 
- * un documento con valor de name qur ya exista
+ * mongo rechazara cualquier intento de insertar o actualizar un documento con un valor de name ya que exista
  * aumenta la velocidad de las busquedas
  */
 
-
-
-
-
-//exportar modelo 
-
-Module.exports=mongoose.model('Subcategory', subcategorySchema);
-
+//exportar el modelo
+module.exports = mongoose.model('Subcategory', subcategorySchema)

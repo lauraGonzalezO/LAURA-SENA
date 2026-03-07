@@ -1,63 +1,43 @@
-/**
- * Rutas de usuarios
- * Define endpoints para gestion de usuarios en el sistema
- * POST /api/users
- * GET /api/users
- * GET /api/users/:id
- * PUT /api/users/:id
- * DELETE /api/users/:id
- */
+const express = require('express');
+const router = express.Router();
+const userControllers = require('../controllers/userControllers');
 
-const express = require ('express');
-const router = express.router();
-const userController = require ('../controllers/userController');
 const { verifyToken } = require('../middleswares/authJwt');
 const { checkRole } = require('../middleswares/role');
 
-//Revision de problemas de autenticacion y autorizacion
-
-router.use((req, res, next) => {
-    console.log('\n== DIAGNOSTICO FR RUTA ===');
-    console.log(`[${new Date().toString()}] ${req.method} ${req.originalUrl}`);
-    console.log('Headers: ',{ 
-        'Authorization': req.headers.authorization ? '***' + req.headers.authorization.slice(8) : null, 
-        'x-access-token' : req.headers
-        ['x-access-token'] ? '***' + req.headers
-        ['x-access-token'].slice(8) : null,
-        'user-agent' : req.headers['user-agent']
-});
-next();
-})
-
-//rutas de ususario
-
-
+// crear usuario
 router.post('/',
     verifyToken,
     checkRole('admin','coordinador'),
-    validateUser,
-    userController.createUser
+    userControllers.createUser
 );
 
-router.get('/', verifyToken, 
+// obtener todos
+router.get('/',
+    verifyToken,
     checkRole('admin','coordinador','auxiliar'),
-    userController.getUser);
-    
-router.get('/:id', verifyToken, 
+    userControllers.getAllUsers
+);
+
+// obtener por id
+router.get('/:id',
+    verifyToken,
     checkRole('admin','coordinador','auxiliar'),
-    userController.getUserById);
+    userControllers.getUserById
+);
 
-
+// actualizar
 router.put('/:id',
     verifyToken,
     checkRole('admin','coordinador','auxiliar'),
-    validateUser,
-    userController.updateUser
+    userControllers.updateUser
 );
+
+// eliminar
 router.delete('/:id',
     verifyToken,
     checkRole('admin'),
-    userController.deleteUser
+    userControllers.deleteUser
 );
 
 module.exports = router;

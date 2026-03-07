@@ -8,6 +8,7 @@ const router = express.Router();
 const { getStatistics } = require('../controllers/statisticsController');
 
 //GET /api/statistics obtiene las estadisticas del sistema
-router.get('/', getStatistics);
+router.get('/',
+     getStatistics);
 
 module.exports = router;

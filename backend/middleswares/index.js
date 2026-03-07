@@ -1,16 +1,16 @@
 /**
- * archivo indice de middlewares
- * centraliza la importacion de todos los middlewares de autenticacion y autorizacion
- * permite importar multiples middlewares de forma concisa en las rutas
+ * Archivo índice de middlewares
+ * Centraliza la importación de todos los middlewares de autenticación y autorización
+ * Permite importar múltiples middlewares de forma más organizada
  */
 
-const authJWR = require('./authJwt');
-const verifySignUp = require('./verifySingUp');
+const authJwt = require('./authJwt');
+const verifySignUp = require('./verifySignUp');
+const role = require('./role');
 
-//exportar todos los middlewares agrupados o por modulo
-
+// Exportar todos los middlewares
 module.exports = {
-    authJWT: require('./authJwt'),
-    verifySignUp: require('./verifySingUp'),
-    role: require('./role')
+  authJwt,
+  verifySignUp,
+  role
 };
