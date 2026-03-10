@@ -22,13 +22,15 @@ exports.createCategory = async (req, res) => {
     try{
         const { name, description } = req.body;
         //validacion de los campos de entrada
-        if(!name || typeof name !== 'string' || name.trim()){
+        // name must be a non-empty trimmed string
+        if (!name || typeof name !== 'string' || name.trim() === '') {
             return res.status(400).json({
                 success: false,
                 message: 'El modelo es obligatorio, debe ser texto valido'
             });
         }
-            if(!description || typeof description !== 'string' || description.trim()){
+        // description must be a non-empty trimmed string
+        if (!description || typeof description !== 'string' || description.trim() === '') {
             return res.status(400).json({
                 success: false,
                 message: 'la descripcion es obligatoria y debe ser texto valido'
@@ -118,7 +120,7 @@ exports.getCategoryById =async (req, res) => {
         try{
     //por defecto solo las categorias activas
     //IncludeInactive=true permite ver desactivadas
-    const category = await Category.findById(req,params.id);
+    const category = await Category.findById(req.params.id);
     if (!category) {
         return res.status(404).json({
             success: false,
@@ -159,25 +161,33 @@ exports.updateCategory = async (req, res) => {
         const { name, description } = req.body;
         const updateData = {};
 
+        // fetch current category once so we can compare and also handle 404
+        const current = await Category.findById(req.params.id);
+        if (!current) {
+            return res.status(404).json({
+                success: false,
+                message: 'Categoria no encontrada'
+            });
+        }
+
         // solo actualizar campos que fueron enviados
 
         if (name){
-            updateData.name = name.trim();
-
-            //verificar si el nuevo nombre ua existe en otra categoria
-
-            const existing = await Category.findOne({
-                name: updateData.name,
-                _id: { $ne: req.params.id} // asegura que el nombre no sea el mismo id
-
-            });
-
-        if(existing) {
-             return res.status(400).json({
-                    success: false,
-                    message: 'Este nombre ya existe'
+            const trimmed = name.trim();
+            // si el nombre no cambia, no hay necesidad de buscar duplicados
+            if (trimmed !== current.name) {
+                const existing = await Category.findOne({
+                    name: trimmed,
+                    _id: { $ne: req.params.id } // asegura que no encontremos el documento actual
                 });
+                if (existing) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Este nombre ya existe'
+                    });
+                }
             }
+            updateData.name = trimmed;
         }
         if (description){
             updateData.description = description.trim();

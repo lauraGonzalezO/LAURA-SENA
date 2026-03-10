@@ -62,6 +62,12 @@ async function runTests() { // Función principal que ejecuta todos los tests en
     password: 'admin123'    // Contraseña del admin
   });
   log('Login admin', res.ok && res.status === 200, `(Status: ${res.status})`); // Verifica que el login respondió 200 OK
+  if (!res.ok) {
+    if (res.status === 404) {
+      console.error('   ⚠️  Admin user not found. Ejecuta `node seedUsers.js` para crear la cuenta inicial.');
+      error('/auth/signin', res);
+    }
+  }
   if (res.ok) { // Si el login fue exitoso
     token = res.data.token; // Guarda el JWT para usarlo en todas las peticiones siguientes
     log('Token obtenido', !!token, `Token: ${token?.substring(0, 20)}...`); // Verifica que el token no sea null/undefined
@@ -73,6 +79,10 @@ async function runTests() { // Función principal que ejecuta todos los tests en
     password: 'wrongpassword'  // Contraseña incorrecta para probar que el API la rechaza
   });
   log('Login fallido rechazado', !res.ok && res.status === 401, `(Status: ${res.status})`); // Verifica que el API retornó 401
+  if (!res.ok && res.status !== 401) {
+    // podría ser 404 si el usuario todavía no existe
+    error('/auth/signin (bad pass)', res);
+  }
 
   // ============= USUARIOS =============
   console.log('\n📋 TEST 2: USUARIOS');
@@ -148,7 +158,8 @@ async function runTests() { // Función principal que ejecuta todos los tests en
 
   // Actualizar categoría
   if (categoryId) { // Solo ejecuta si la categoría fue creada exitosamente
-    res = await request('PUT', `/categories/${categoryId}`, { name: 'Updated Category' }); // Petición PUT para cambiar el nombre
+    // usar un nombre único para evitar conflictos con ejecuciones anteriores
+    res = await request('PUT', `/categories/${categoryId}`, { name: `Updated Category ${timestamp}` }); // Petición PUT para cambiar el nombre
     log('PUT /categories/:id (actualizar)', res.ok && res.status === 200, `(Status: ${res.status})`); // Verifica 200 OK
   }
 
@@ -187,7 +198,7 @@ async function runTests() { // Función principal que ejecuta todos los tests en
 
   // Actualizar subcategoría
   if (subcategoryId) { // Solo ejecuta si la subcategoría fue creada exitosamente
-    res = await request('PUT', `/subcategories/${subcategoryId}`, { name: 'Updated Subcategory' }); // Petición PUT para cambiar nombre
+    res = await request('PUT', `/subcategories/${subcategoryId}`, { name: `Updated Subcategory ${timestamp}` }); // Petición PUT para cambiar nombre
     log('PUT /subcategories/:id (actualizar)', res.ok && res.status === 200, `(Status: ${res.status})`); // Verifica 200 OK
   }
 

@@ -15,7 +15,8 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
         unique: true,      // propiedad debe ser 'unique' en minúsculas
-        trim: true // elimina espacios al inicio y al final
+        trim: true, // elimina espacios al inicio y al final
+        lowercase: true // siempre almacena el nombre en minúsculas para búsquedas consistentes
     },
     //Email debe ser unico valido en minusculas
     email: {

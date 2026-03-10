@@ -20,12 +20,12 @@ const config =require('../config/auth.config');
 
 exports.signup = async (req, res) => {
     try{
-        //crear nuevo usuario
-        const user = new user({
+                // crear nuevo usuario (use el modelo User, no variable lowercase)
+        const user = new User({
             username: req.body.username,
             email: req.body.email,
             password: req.body.password,
-            role: req.body.role || 'auxiliar' //por defecto el rol es auxiliar
+            role: req.body.role || 'auxiliar' // por defecto el rol es auxiliar
         });
 
         //guardar en base de datos
@@ -53,7 +53,7 @@ exports.signup = async (req, res) => {
 
         res.status(200).json({
             success: true,
-            message: 'Usuario no registrado correctamente',
+            message: 'Usuario registrado correctamente',
             token: token,
             user: UserResponse
         });
@@ -93,13 +93,16 @@ exports.signin = async(req, res) => {
                 message: 'password requerido'
             });
         }
+        //normalizar valores recibidos (username y email se almacenan en minúsculas)
+        const loginUsername = req.body.username ? req.body.username.trim().toLowerCase() : undefined;
+        const loginEmail = req.body.email ? req.body.email.trim().toLowerCase() : undefined;
         //buscar usuario por email o username
         const user = await User.findOne({
             $or: [
-                { username: req.body.username},
-                { email: req.body.email}
+                { username: loginUsername },
+                { email: loginEmail }
             ]
-        }).select('+password'); //inlcuye password field
+        }).select('+password'); //incluye password field
 
         // si no existe el usuario con este email o username
         if (!user) {

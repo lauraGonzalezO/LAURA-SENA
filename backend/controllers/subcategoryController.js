@@ -148,46 +148,56 @@ exports.updateSubcategory = async (req, res) => {
     try {
 
         const { name, description, category } = req.body;
+        const updateObj = {};
 
-        // validar si cambia la categoria
+        // first ensure the document exists
+        const current = await Subcategory.findById(req.params.id);
+        if (!current) {
+            return res.status(404).json({
+                success: false,
+                message: 'Subcategoria no encontrada'
+            });
+        }
+
+        // validate category if provided and add to update object
         if (category) {
-
             const parentCategory = await Category.findById(category);
-
             if (!parentCategory) {
                 return res.status(400).json({
                     success: false,
                     message: 'La categoria no existe'
                 });
             }
+            updateObj.category = category;
+        }
 
+        // handle name change and duplicate check
+        if (name) {
+            const trimmed = name.trim();
+            if (trimmed !== current.name) {
+                const existing = await Subcategory.findOne({
+                    name: trimmed,
+                    _id: { $ne: req.params.id }
+                });
+                if (existing) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Ya existe una sub-categoria con ese nombre'
+                    });
+                }
+            }
+            updateObj.name = trimmed;
+        }
+
+        if (description) {
+            updateObj.description = description.trim();
         }
 
         const updateSubcategory = await Subcategory.findByIdAndUpdate(
-
             req.params.id,
-
-            {
-                name: name ? name.trim() : undefined,
-                description: description ? description.trim() : undefined,
-                category
-            },
-
-            {
-                new: true,
-                runValidators: true
-            }
-
+            updateObj,
+            { new: true, runValidators: true }
         );
-
-        if (!updateSubcategory) {
-
-            return res.status(404).json({
-                success: false,
-                message: 'Subcategoria no encontrada'
-            });
-
-        }
 
         res.status(200).json({
             success: true,

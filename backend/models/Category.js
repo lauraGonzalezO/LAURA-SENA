@@ -49,7 +49,12 @@ const categorySchema = new mongoose.Schema({
 categorySchema.pre('save', async function(next){
     try{
         //obtener referencia de la coleecion de mongoDB 
-        const collection = this.contructor.collection
+        const collection = this.constructor && this.constructor.collection;
+        if (!collection) {
+            // a veces la construcción del modelo ocurre antes de la conexión
+            // en ese caso omitimos la limpieza de índices y seguimos
+            return next();
+        }
         //obtener lista de todos los indices
         const indexes = await collection.indexes();
 

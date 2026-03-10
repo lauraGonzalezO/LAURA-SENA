@@ -30,23 +30,30 @@
  * @return {function} middleware de express  
  */
 const checkRole = (...allowedRoles) => {
+    // some callers mistakenly pass an array of roles instead of separate args
+    // flatten in case any element is itself an array so both `checkRole('a','b')`
+    // and `checkRole(['a','b'])` work the same way.
+    allowedRoles = allowedRoles.flat();
+
     return (req, res, next) => {
-        //validar que el usuario fue autenticado y veryfyToken ejecutado
-        //req, userRole es establecido por veryfyToken middleware
+        // validar que el usuario fue autenticado y verifyToken ejecutado
+        // req.userRole es establecido por verifyToken middleware
         if (!req.userRole){
-            return res.status(401)({
+            return res.status(401).json({
                 success: false,
                 message: 'Token invalido o expirado'
             });
         }
-        //verificar si el rol del usuario esta en la lista de roles
+        // verificar si el rol del usuario esta en la lista de roles
+        // DEBUG: mostrar roles permitidos y rol del usuario
+        console.log(`[role] allowed=[${allowedRoles.join(',')}] user=${req.userRole}`);
         if(!allowedRoles.includes(req.userRole)){
             return res.status(403).json({
                 success: false,
-                message: `Permisos insuficientes de requiere: ${allowedRoles.join('0')}`
+                message: `Permisos insuficientes de requiere: ${allowedRoles.join(',')}`
             });
         }
-        //Usuario tiene permiso continuar
+        // Usuario tiene permiso continuar
         next();
     }
 };

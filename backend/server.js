@@ -21,6 +21,7 @@ verifica que las variables de entorno requeridas esten definidas
 // validar variables de entorno esenciales
 // se puede usar la URL de la configuración por defecto si no se especifica
 const mongoUri = process.env.MONGO_URI || config.DB.URL;
+console.log('DEBUG: usando conexión MongoDB →', mongoUri);
 if (!mongoUri){
     console.error('error: cadena de conexión MongoDB no está definida');
     process.exit(1);
