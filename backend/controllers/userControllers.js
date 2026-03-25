@@ -1,67 +1,66 @@
-/**
+ /**
  * Controlador de usuarios
- * Este modulo maneja todas las operaciones del CRUD para la gestion de usuarios
+ * Este módulo maneja todas las operaciones del CRUD para la gestión de usuarios.
+ * Incluye control de acceso, validaciones y manejo de errores.
+ * Roles permitidos: admin, coordinador, auxiliar.
+ * 
+ * Seguridad:
+ * - Las contraseñas nunca se devuelven en las respuestas.
+ * - Los auxiliares solo pueden ver y actualizar su propio perfil.
+ * - Los coordinadores no pueden ver a los administradores.
+ * - Eliminar permanentemente un usuario solo lo puede hacer un admin.
+ * 
+ * Operaciones:
+ * getAllUsers: listar usuarios con filtro por rol.
+ * getUserById: obtener un usuario por su id.
+ * createUser: crear un nuevo usuario.
+ * updateUser: actualizar un usuario con restricciones de rol.
+ * deleteUser: eliminar usuario con restricciones de rol.
  */
 
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 
 /**
+ * Obtener lista de usuarios
  * GET /api/users
- * Obtener todos los usuarios
+ * Auth token requerido
  */
-
 exports.getAllUsers = async (req, res) => {
     try {
-
-        const includeInactive = req.query.includeInactive === 'true';
-        const activeFilter = includeInactive ? {} : { active: { $ne: false } };
+        const includeInactive = req.query.inactive === 'true';
+        const activeFilter = includeInactive ? {} : 
+        { active: { $ne: false } };
 
         let users;
-
-        // control de acceso basado en rol
+        //control de acceso basado en el rol 
         if (req.userRole === 'auxiliar') {
-
-            // auxiliar solo puede verse a sí mismo
-            users = await User.find({
-                _id: req.userId,
-                ...activeFilter
-            }).select('-password');
-
+            // Los auxiliares solo pueden ver su propio perfil
+            users = await User.find({ _id: req.userId, ...activeFilter }).select('-password');
         } else {
-
-            // admin y coordinador ven todos
+            // Los admin y coordinadores pueden ver todos los usuarios 
             users = await User.find(activeFilter).select('-password');
-
         }
 
         res.status(200).json({
             success: true,
             data: users
         });
-
     } catch (error) {
-
         console.error('[CONTROLLER] Error en getAllUsers:', error.message);
-
         res.status(500).json({
             success: false,
-            message: 'Error al obtener los usuarios'
+            message: 'Error al obtener usuarios'
         });
-
     }
 };
 
-
 /**
+ * Obtener un usuario por ID
  * GET /api/users/:id
- * Obtener usuario por ID
  */
-
 exports.getUserById = async (req, res) => {
-
     try {
-
         const user = await User.findById(req.params.id).select('-password');
 
         if (!user) {
@@ -71,119 +70,96 @@ exports.getUserById = async (req, res) => {
             });
         }
 
-        // auxiliar solo puede ver su propio perfil
-        if (req.userRole === 'auxiliar' && req.userId !== user._id.toString()) {
-
+        // Validaciones de acceso
+        if (req.userRole === 'auxiliar' && req.userId.toString() !== user._id.toString()) {
             return res.status(403).json({
                 success: false,
                 message: 'No tienes permiso para ver este usuario'
             });
-
         }
 
-        // coordinador no puede ver admins
         if (req.userRole === 'coordinador' && user.role === 'admin') {
-
             return res.status(403).json({
                 success: false,
-                message: 'No puedes ver usuarios administradores'
+                message: 'No puedes ver usuarios admin'
             });
-
         }
 
         res.status(200).json({
             success: true,
             data: user
         });
-
     } catch (error) {
-
-        console.error('Error en getUserById:', error.message);
-
+        console.error('Error en getUserById:', error);
         res.status(500).json({
             success: false,
-            message: 'Error al obtener el usuario'
+            message: 'Error al obtener usuario específico'
         });
-
     }
 };
 
-
 /**
+ * Crear un nuevo usuario
  * POST /api/users
- * Crear usuario
  */
-
 exports.createUser = async (req, res) => {
-
     try {
-
         const { username, email, password, role } = req.body;
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const user = new User({
+        const newUser = new User({
             username,
             email,
             password: hashedPassword,
             role
         });
 
-        const savedUser = await user.save();
+        //Guardar en base de datos
+        const savedUser = await newUser.save();
 
         res.status(201).json({
             success: true,
             message: 'Usuario creado correctamente',
-            data: {
+            user: {
                 id: savedUser._id,
                 username: savedUser.username,
                 email: savedUser.email,
                 role: savedUser.role
             }
         });
-
     } catch (error) {
-
-        console.error('Error al crear usuario:', error);
-
+        console.error('Error en createUser:', error);
         res.status(500).json({
             success: false,
-            message: 'Error al crear usuario'
+            message: 'Error al crear usuario',
+            error: error.message
         });
-
     }
 };
 
-
 /**
+ * Actualizar un usuario
  * PUT /api/users/:id
- * Actualizar usuario
  */
-
 exports.updateUser = async (req, res) => {
-
     try {
-
-        // auxiliar solo puede editar su propio perfil
-        if (req.userRole === 'auxiliar' && req.userId !== req.params.id) {
-
+        // Restricciones: auxiliar solo puede actualizar su propio perfil y no puede cambiar rol
+        if (req.userRole === 'auxiliar' && req.userId.toString() !== req.params.id) {
             return res.status(403).json({
                 success: false,
                 message: 'No tienes permiso para actualizar este usuario'
             });
-
         }
 
-        // auxiliar no puede cambiar rol
         if (req.userRole === 'auxiliar' && req.body.role) {
-
             return res.status(403).json({
                 success: false,
-                message: 'No puedes modificar tu rol'
+                message: 'No tienes permiso para modificar tu rol'
             });
-
         }
 
+        // Actualizar usuario
         const updatedUser = await User.findByIdAndUpdate(
             req.params.id,
             { $set: req.body },
@@ -191,12 +167,10 @@ exports.updateUser = async (req, res) => {
         ).select('-password');
 
         if (!updatedUser) {
-
             return res.status(404).json({
                 success: false,
                 message: 'Usuario no encontrado'
             });
-
         }
 
         res.status(200).json({
@@ -204,84 +178,66 @@ exports.updateUser = async (req, res) => {
             message: 'Usuario actualizado correctamente',
             data: updatedUser
         });
-
     } catch (error) {
-
         console.error('Error en updateUser:', error);
-
         res.status(500).json({
             success: false,
-            message: 'Error al actualizar usuario'
+            message: 'Error al actualizar usuario',
+            error: error.message
         });
-
     }
 };
 
-
 /**
+ * Eliminar un usuario (soft o hard delete)
  * DELETE /api/users/:id
- * Eliminar o desactivar usuario
  */
-
 exports.deleteUser = async (req, res) => {
-
     try {
-
         const isHardDelete = req.query.hardDelete === 'true';
-
         const userToDelete = await User.findById(req.params.id);
 
         if (!userToDelete) {
-
             return res.status(404).json({
                 success: false,
                 message: 'Usuario no encontrado'
             });
-
         }
 
-        // proteger administradores
+        // Protección: solo admin puede eliminar/desactivar admins
         if (
             userToDelete.role === 'admin' &&
-            userToDelete._id.toString() !== req.userId
+            req.user.role !== 'admin'
         ) {
-
             return res.status(403).json({
                 success: false,
-                message: 'No puedes eliminar otro administrador'
+                message: 'No tienes permiso para eliminar o desactivar administradores'
             });
-
         }
 
         if (isHardDelete) {
-
+            //eliminar permanentemente
             await User.findByIdAndDelete(req.params.id);
-
-            return res.status(200).json({
+            res.status(200).json({
                 success: true,
-                message: 'Usuario eliminado permanentemente'
+                message: 'Usuario eliminado permanentemente',
+                data: userToDelete
             });
-
         } else {
-
+            //soft delete para eliminar usuario
             userToDelete.active = false;
             await userToDelete.save();
-
-            return res.status(200).json({
+            res.status(200).json({
                 success: true,
                 message: 'Usuario desactivado correctamente'
             });
-
         }
-
     } catch (error) {
-
         console.error('Error en deleteUser:', error);
-
         res.status(500).json({
             success: false,
-            message: 'Error al eliminar usuario'
+            message: 'Error al desactivar el usuario',
+            error: error.message
         });
-
     }
 };

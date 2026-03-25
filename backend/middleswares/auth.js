@@ -1,18 +1,18 @@
-/*
-MIDDLEWARE: Autenticación JWT
-Verifica que el usuario tenga un token válido
-y carga los datos del usuario en req.user
-*/
+/**
+ * MIDDLEWARE: Autenticacion JWT
+ * 
+ * Verifica que el usuario tenga un token valido y carga los datos del usuario en req.user
+ */
 
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const jwt = require ('jsonwebtoken');
+const User = require ('../models/User');
 
-/*
-Autenticar usuarios
-Valida el token JWT Bearer en el header Authorization.
-Si es válido, carga el usuario en req.user.
-Si no es válido o no existe, retorna 401 Unauthorized.
-*/
+/**
+ * Autenticar usuario
+ * valida el token Bearer en el header Authorization
+ * si es valido carga el usuario en req.user
+ * si no es valido o no existe retorna  401 Unauthorized
+ */
 
 exports.authenticate = async (req, res, next) => {
     try {
@@ -20,17 +20,19 @@ exports.authenticate = async (req, res, next) => {
         const token = req.header('Authorization')?.
         replace('Bearer ', '');
 
-        // Si no hay token, rechazar la solicitud
-        if (!token) {
+        //si no hay token rechaza la solicitud 
+        if(!token){
             return res.status(401).json({
                 success: false,
-                message: 'Token de autenticación requerido',
-                details: 'Incluye Authorization: Bearer <token>'
+                message: 'Token de autenticacion requerido',
+                details: 'Incluye Authorization Bearer <token>'
             });
         }
+        //Verificar y decodificar el token
+        const decoded = jwt.verify(token, process.env.JWR_SECRET);
 
-        // Verificar y decodificar el token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        //Buscar el usuario en la base de datos
+        const user = await User.findById(decoded.id);
 
         // Buscar el usuario en la base de datos
         const user = await User.findById(decoded.userId);
@@ -43,10 +45,11 @@ exports.authenticate = async (req, res, next) => {
             });
         }
 
-        // Cargar el usuario en el request
+        //Cargar el usuario en el request para usar en los siguientes middlewares o controladores
         req.user = user;
 
-        // Llamar al siguiente middleware o controlador
+        //Llamar el siguiente middleware o controlador
+
         next();
     } catch (error) {
         //token invalido o error de verificacion 
@@ -59,40 +62,35 @@ exports.authenticate = async (req, res, next) => {
         } else if (error.name === 'JsonWebTokenError') {
             message = 'Token de autenticación no válido';
         }
-
+        
         return res.status(401).json({
             success: false,
-            message,
-            error: error.message
-        });
-    }
+            message: error.message
+        })
+    } 
 };
 
-/*
-middleware para autorizar por el rol
-verificar que el usuario tiene uno de los roles requeridos se usa despues del maldware de autenticacion
-// @param{Array} roles - Lista de roles permitidos para acceder a la ruta
-// @returns {Function} Middleware de autorización
-
-uso : app.delete('/api/users/:id', authenticateJWT, authorizeRoles(['admin']), deleteUser);
-*/
-
-exports.authorizeRoles = (roles) => {
+/**
+ * middleware para autorizar por rol
+ * Verificar que el usuario tiene uno de los roles requeridos se usa despues del middleware aithenticate
+ *  @param {Array} roles - array de roles permitidos
+ *  @return {Function} Middleware function
+ * 
+ * uso: app.delete('/api/products/:id', authenticate, authorize (['admin']))
+ */
+exports.authorize = (roles) => {
     return (req, res, next) => {
-        // Verificar que el usuario autenticado tiene uno de los roles permitidos
-        if (!roles.includes(req.user.role)) {
+        //Verificar si el rol del usuario esta en la lista de roles permitidos
+        if(!roles.includes(req.user.role)){
             return res.status(403).json({
                 success: false,
-                message: 'No tienes permiso para realizar esta acción',
+                message: 'No tienes autorizacion para esta accion',
                 requiredRoles: roles,
                 currentRole: req.user.role,
-                details: `Tu rol es "${req.user.role}"
-                pero se requiere uno de: ${roles.join(', ')}`
-
-
+                details: `Tu rol es"${req.user.role}" pero se requiere uno de: ${roles.join(',')}`
             });
         }
-        // si el usuario tiene permiso continuar
+        //si el usuario tiene permiso de continuar
         next();
-    }
+    };
 };
