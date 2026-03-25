@@ -1,0 +1,73 @@
+/**
+ * Rutas de productos
+ * define los endpoints CRUD para la gestion de productos
+ * las productos son contenedores padres de productos y productos
+ * endpoints:
+ * Post /api/products crea una nueva subcategoria
+ * Get /api/products obtiene todas las productos
+ * Get /api/products/:id obtiene una subcategoria por id
+ * Put /api/products/:id actualiza una subcategoria por id
+ * Delete /api/products/:id elimina una subcategoria/desactivar 
+ */
+
+const express = require('express');
+const router = express.router();
+const productController = require('../controllers/productController');
+const { check } = require('express-validator');
+const { verifyToken } = require('../middleswares/authJwt');
+const { checkRole } = require('../middleswares/role');
+
+const validateProduct = [
+    check('name')
+        .not().isEmpty()
+        .withmessage('el nombre es obligatorio'),
+ 
+    check('description')
+        .not().isEmpty()
+        .withmessage('la descipcion es obligatoria'),
+
+    check('price')
+        .not().isEmpty()
+        .withmessage('el precio es obligatorio'),
+        
+    check('stock')
+        .not().isEmpty()
+        .withmessage('el stock es obligatoria'),
+        
+    check('category')
+        .not().isEmpty()
+        .withmessage('la categoria es obligatoria'),
+        
+    check('subcategory')
+        .not().isEmpty()
+        .withmessage('la categoria es obligatoria'),
+];
+
+//Rutas CRUD
+
+router.post('/',
+    verifyToken,
+    checkRole(['admin','coordinador','auxiliar']),
+    validateProduct,
+    productController.createProduct
+);
+
+router.get('/',
+    verifyToken,
+    productController.getproduct);
+
+router.get('/:id', productController.getProductById);
+
+router.put('/:id',
+    verifyToken,
+    checkRole(['admin','coordinador']),
+    validateProduct,
+    productController.updateProduct
+);
+router.delete('/:id',
+    verifyToken,
+    checkRole(['admin']),
+    productController.deleteProduct
+);
+
+module.exports = router;

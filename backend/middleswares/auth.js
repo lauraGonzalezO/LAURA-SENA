@@ -14,10 +14,11 @@ Si es válido, carga el usuario en req.user.
 Si no es válido o no existe, retorna 401 Unauthorized.
 */
 
-exports.authenticateJWT = async (req, res, next) => {
+exports.authenticate = async (req, res, next) => {
     try {
         // Extraer el token del header: Bearer <token>
-        const token = req.header('Authorization')?.replace('Bearer ', '');
+        const token = req.header('Authorization')?.
+        replace('Bearer ', '');
 
         // Si no hay token, rechazar la solicitud
         if (!token) {
@@ -34,7 +35,7 @@ exports.authenticateJWT = async (req, res, next) => {
         // Buscar el usuario en la base de datos
         const user = await User.findById(decoded.userId);
 
-        // Si el usuario no existe, rechazar la solicitud
+        // Si el usuario no existe
         if (!user) {
             return res.status(401).json({
                 success: false,
@@ -47,14 +48,14 @@ exports.authenticateJWT = async (req, res, next) => {
 
         // Llamar al siguiente middleware o controlador
         next();
-
     } catch (error) {
+        //token invalido o error de verificacion 
         console.error('Error en authenticateJWT:', error.message);
 
         let message = 'Token de autenticación inválido';
 
         if (error.name === 'TokenExpiredError') {
-            message = 'Token de autenticación expirado';
+            message = 'Token de autenticación expirado por favor inicie sesion nuevamente';
         } else if (error.name === 'JsonWebTokenError') {
             message = 'Token de autenticación no válido';
         }

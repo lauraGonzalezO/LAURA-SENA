@@ -39,7 +39,7 @@ const checkRole = (...allowedRoles) => {
         if (!req.userRole) {
             return res.status(401).json({
                 success: false,
-                message: 'Token inválido o usuario no autenticado.'
+                message: 'Token inválido o expirado.'
             });
         }
 
