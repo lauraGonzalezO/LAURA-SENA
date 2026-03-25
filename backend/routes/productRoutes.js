@@ -11,7 +11,7 @@
  */
 
 const express = require('express');
-const router = express.router();
+const router = express.Router();
 const productController = require('../controllers/productController');
 const { check } = require('express-validator');
 const { verifyToken } = require('../middleswares/authJwt');
@@ -20,27 +20,27 @@ const { checkRole } = require('../middleswares/role');
 const validateProduct = [
     check('name')
         .not().isEmpty()
-        .withmessage('el nombre es obligatorio'),
+        .withMessage('el nombre es obligatorio'),
  
     check('description')
         .not().isEmpty()
-        .withmessage('la descipcion es obligatoria'),
+        .withMessage('la descipcion es obligatoria'),
 
     check('price')
         .not().isEmpty()
-        .withmessage('el precio es obligatorio'),
+        .withMessage('el precio es obligatorio'),
         
     check('stock')
         .not().isEmpty()
-        .withmessage('el stock es obligatoria'),
+        .withMessage('el stock es obligatoria'),
         
     check('category')
         .not().isEmpty()
-        .withmessage('la categoria es obligatoria'),
+        .withMessage('la categoria es obligatoria'),
         
     check('subcategory')
         .not().isEmpty()
-        .withmessage('la categoria es obligatoria'),
+        .withMessage('la categoria es obligatoria'),
 ];
 
 //Rutas CRUD
@@ -54,7 +54,7 @@ router.post('/',
 
 router.get('/',
     verifyToken,
-    productController.getproduct);
+    productController.getProducts);
 
 router.get('/:id', productController.getProductById);
 

@@ -160,7 +160,7 @@ exports.getSubCategoryById = async (req, res) => {
  * 500: error de base de datos
  */
 
-exports.UdpateSubCategory=async(req,res) => {
+exports.updateSubCategory=async(req,res) => {
     try{
         const {name,description, category} = req.body;
         // verificar la categoria cambia de padre

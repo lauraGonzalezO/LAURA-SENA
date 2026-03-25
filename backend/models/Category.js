@@ -86,5 +86,5 @@ categorySchema.index({name: 1},  {
 
 //exportar modelo 
 
-Module.exports=mongoose.model('category', categorySchema)
+module.exports = mongoose.model('category', categorySchema)
 

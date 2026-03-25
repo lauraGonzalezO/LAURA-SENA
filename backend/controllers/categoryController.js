@@ -172,7 +172,7 @@ exports.getCategoryById = async (req, res) => {
  * 500: error de base de datos
  */
 
-exports.UdpateCategory=async(req,res) => {
+exports.updateCategory=async(req,res) => {
     try{
         const {name,description} = req.body;
         const updateData ={};

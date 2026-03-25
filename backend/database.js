@@ -14,11 +14,11 @@ exporta la funcion de  connectdb para usar en server.js
 */
 
 const mongoose = require('mongoose');
-const {DB_URI} = process.env;
+const {MONGODB_URI} = process.env;
 
 const connectDB = async () => {
     try {
-        await mongoose.connect(DB_URI, {
+        await mongoose.connect(MONGODB_URI, {
             useNewUrlParser: true ,
             useUnifiedTopology: true,
             

@@ -19,7 +19,134 @@
  */
 
 const User = require('../models/User');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const config = require('../config/auth.config');
+
+/**
+ * Signin - Iniciar sesión
+ * POST /api/auth/signin
+ * Body: { username, password }
+ * Retorna token JWT si credenciales correctas
+ */
+exports.signin = async (req, res) => {
+    try {
+        const { username, password } = req.body;
+
+        if (!username || !password) {
+            return res.status(400).json({
+                success: false,
+                message: 'Username y password son requeridos'
+            });
+        }
+
+        const user = await User.findOne({ username });
+
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: 'Credenciales inválidas'
+            });
+        }
+
+        const passwordIsValid = await bcrypt.compare(password, user.password);
+
+        if (!passwordIsValid) {
+            return res.status(401).json({
+                success: false,
+                message: 'Credenciales inválidas'
+            });
+        }
+
+        if (!user.active) {
+            return res.status(401).json({
+                success: false,
+                message: 'Usuario inactivo'
+            });
+        }
+
+        const token = jwt.sign({ id: user._id, role: user.role }, config.secret, {
+            expiresIn: config.jwtExpiration
+        });
+
+        res.status(200).json({
+            success: true,
+            message: 'Login exitoso',
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email,
+                role: user.role
+            },
+            token
+        });
+
+    } catch (error) {
+        console.error('Error en signin:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error en el servidor',
+            error: error.message
+        });
+    }
+};
+
+/**
+ * Signup - Registrar nuevo usuario (solo admin)
+ * POST /api/auth/signup
+ * Requiere token de admin
+ */
+exports.signup = async (req, res) => {
+    try {
+        const { username, email, password, role } = req.body;
+
+        if (!username || !email || !password || !role) {
+            return res.status(400).json({
+                success: false,
+                message: 'Todos los campos son requeridos'
+            });
+        }
+
+        const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+
+        if (existingUser) {
+            return res.status(400).json({
+                success: false,
+                message: 'Username o email ya existe'
+            });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, config.saltRounds);
+
+        const newUser = new User({
+            username,
+            email,
+            password: hashedPassword,
+            role
+        });
+
+        const savedUser = await newUser.save();
+
+        res.status(201).json({
+            success: true,
+            message: 'Usuario creado exitosamente',
+            user: {
+                id: savedUser._id,
+                username: savedUser.username,
+                email: savedUser.email,
+                role: savedUser.role
+            }
+        });
+
+    } catch (error) {
+        console.error('Error en signup:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al crear usuario',
+            error: error.message
+        });
+    }
+};
 
 /**
  * Obtener lista de usuarios

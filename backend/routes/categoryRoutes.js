@@ -11,7 +11,7 @@ Delete /api/categories/:id elimina o desactiva una categoria por id
 */
 
 const express = require('express');
-const router = express.Router('');
+const router = express.Router();
 const categoryController = require('../controllers/categoryController');
 const {verifyToken} = require('../middleswares/authJwt');
 const {checkRole} = require('../middleswares/role');

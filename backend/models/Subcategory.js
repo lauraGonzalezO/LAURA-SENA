@@ -28,7 +28,7 @@ const subcategorySchema = new mongoose.Schema({
     //relacion 1 - muchos una categoria puede tener muchas subcategorias
 
     category: {
-        type: mongoose.Schema.types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'category', //puede ser poblado con .populate('category')
 
         required: [true, 'la categoria ees requerida']
@@ -85,5 +85,5 @@ subcategorySchema.post('save',function (error, doc,next){
 
 //exportar modelo 
 
-Module.exports=mongoose.model('Subcategory', subcategorySchema);
+module.exports = mongoose.model('Subcategory', subcategorySchema);
 

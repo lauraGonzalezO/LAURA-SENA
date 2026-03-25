@@ -9,7 +9,7 @@
  */
 
 const express = require ('express');
-const router = express.router();
+const router = express.Router();
 const userController = require ('../controllers/userController');
 const { verifyToken } = require('../middleswares/authJwt');
 const { checkRole } = require('../middleswares/role');
@@ -35,13 +35,12 @@ next();
 router.post('/',
     verifyToken,
     checkRole('admin','coordinador'),
-    validateUser,
     userController.createUser
 );
 
 router.get('/', verifyToken, 
     checkRole('admin','coordinador','auxiliar'),
-    userController.getUser);
+    userController.getAllUsers);
     
 router.get('/:id', verifyToken, 
     checkRole('admin','coordinador','auxiliar'),
@@ -51,7 +50,6 @@ router.get('/:id', verifyToken,
 router.put('/:id',
     verifyToken,
     checkRole('admin','coordinador','auxiliar'),
-    validateUser,
     userController.updateUser
 );
 router.delete('/:id',

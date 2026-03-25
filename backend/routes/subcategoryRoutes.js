@@ -11,7 +11,7 @@ Delete /api/subcategories/:id elimina o desactiva una subcategoria por id
 */
 
 const express = require('express');
-const router = express.Router('');
+const router = express.Router();
 const subcategoryController = require('../controllers/subcategoryController');
 const {verifyToken} = require('../middleswares/authJwt');
 const {checkRole} = require('../middleswares/role');
@@ -25,11 +25,11 @@ const validateSubcategory = [
 ]
 
 
-router.post('/', verifyToken, checkRole(['admin','coordinador']), validateSubcategory, subcategoryController.createSubcategory);
-router.get('/', subcategoryController.getSubcategories);
-router.get('/:id', subcategoryController.getSubcategoryById);
-router.put('/:id', verifyToken, checkRole(['admin','coordinador']), validateSubcategory, subcategoryController.updateSubcategory);
-router.delete('/:id', verifyToken, checkRole(['admin']), subcategoryController.deleteSubcategory);
+router.post('/', verifyToken, checkRole(['admin','coordinador']), validateSubcategory, subcategoryController.createSubCategory);
+router.get('/', subcategoryController.getSubCategories);
+router.get('/:id', subcategoryController.getSubCategoryById);
+router.put('/:id', verifyToken, checkRole(['admin','coordinador']), validateSubcategory, subcategoryController.updateSubCategory);
+router.delete('/:id', verifyToken, checkRole(['admin']), subcategoryController.deleteSubCategory);
 
 // --- rutas de productos ----------------------------------------------------
 const productController = require('../controllers/productController');
