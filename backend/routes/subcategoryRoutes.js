@@ -25,13 +25,13 @@ const validateSubcategory = [
     check('description')
         .not().isEmpty()
         .withMessage('La descripción es obligatoria'),
+];
 
-
-router.post('/', verifyToken, checkRole('admin','coordinador'), validateSubcategory, subcategoryController.createSubCategory);
-router.get('/', subcategoryController.getSubCategories);
-router.get('/:id', subcategoryController.getSubCategoryById);
-router.put('/:id', verifyToken, checkRole('admin','coordinador'), validateSubcategory, subcategoryController.updateSubCategory);
-router.delete('/:id', verifyToken, checkRole('admin'), subcategoryController.deleteSubCategory);
+router.post('/', verifyToken, checkRole(['admin','coordinador']), validateSubcategory, subcategoryController.createSubcategory);
+router.get('/', subcategoryController.getSubcategories);
+router.get('/:id', subcategoryController.getSubcategoryById);
+router.put('/:id', verifyToken, checkRole(['admin','coordinador']), validateSubcategory, subcategoryController.updateSubcategory);
+router.delete('/:id', verifyToken, checkRole(['admin']), subcategoryController.deleteSubcategory);
 
 // --- rutas de productos ----------------------------------------------------
 const productController = require('../controllers/productController');
@@ -46,37 +46,5 @@ const validateProduct = [
     check('category').not().isEmpty().withMessage('La categoria es obligatoria'),
     check('subcategory').not().isEmpty().withMessage('La subcategoria es obligatoria')
 ];
-
-// Rutas CRUD
-
-router.post('/',
-    verifyToken,
-    checkRole(['admin','coordinador']),
-    validateSubcategory,
-    subcategoryController.createSubcategory
-);
-
-router.get('/',
-    verifyToken,
-    subcategoryController.getSubcategories
-);
-
-router.get('/:id',
-    verifyToken,
-    subcategoryController.getSubcategoryById
-);
-
-router.put('/:id',
-    verifyToken,
-    checkRole(['admin','coordinador']),
-    validateSubcategory,
-    subcategoryController.updateSubcategory
-);
-
-router.delete('/:id',
-    verifyToken,
-    checkRole(['admin']),
-    subcategoryController.deleteSubcategory
-);
 
 module.exports = router;

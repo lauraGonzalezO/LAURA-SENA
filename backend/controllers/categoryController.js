@@ -175,7 +175,7 @@ exports.updateCategory=async(req,res) => {
             if(existingCategory){
                 return res.status(400).json({
                     success: false,
-                    message: 'este usuario ya existe'
+                    message: 'Ya existe una categoría con ese nombre'
                 });
             }
         }
@@ -199,47 +199,10 @@ exports.updateCategory=async(req,res) => {
             });
         }
 
-        // solo actualizar campos que fueron enviados
-
-        if (name){
-            const trimmed = name.trim();
-            // si el nombre no cambia, no hay necesidad de buscar duplicados
-            if (trimmed !== current.name) {
-                const existing = await Category.findOne({
-                    name: trimmed,
-                    _id: { $ne: req.params.id } // asegura que no encontremos el documento actual
-                });
-                if (existing) {
-                    return res.status(400).json({
-                        success: false,
-                        message: 'Este nombre ya existe'
-                    });
-                }
-            }
-            updateData.name = trimmed;
-        }
-        if (description){
-            updateData.description = description.trim();
-        }
-
-        //actualizar la categoria en la base de datos
-
-        const updateCategory = await Category.findByIdAndUpdate(
-            req.params.id,
-            updateData,
-            { new: true, runValidators: true}
-        );
-
-        if (!updateCategory){
-            return res.status(404).json({
-                success: false,
-                message: 'Categoria no encontrada'
-            });
-        }
         res.status(200).json({
             success: true,
-            message: 'Categoria actualizada exitozamente',
-            data: updateCategory
+            message: 'Categoría actualizada exitosamente',
+            data: updatedCategory
         });
     } catch (error){
         console.error('Error en updateCategory', error);
@@ -289,19 +252,19 @@ exports.updateCategory=async(req,res) => {
             });
         }
         if(isHardDelete){
-            //eliminar en cascada subcategorias y prodcutyos relacionados
+            //eliminar en cascada subcategorias y productos relacionados
             // paso 1 obtener IDs de todas las subcategorias relacionadas
+            const subIds = await Subcategory.find({category: req.params.id}).select('_id');
+            const subIdArray = subIds.map(sub => sub._id);
 
-        if(isHardDelete) {
-
+            // paso 2 eliminar todos los productos de esta categoria
             await Product.deleteMany({
                 category: req.params.id});
 
-            //paso 3 eliminar todos los productos 
-            // de las subcategorias de esta categoria
+            //paso 3 eliminar todos los productos de las subcategorias de esta categoria
             await Product.deleteMany({
                 subcategory:{
-                    $in: subIds}
+                    $in: subIdArray}
             });
 
             //paso 4 eliminar todas las subcategorias de esta categoria
