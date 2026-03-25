@@ -25,11 +25,11 @@ const validateSubcategory = [
 ]
 
 
-router.post('/', verifyToken, checkRole(['admin','coordinador']), validateSubcategory, subcategoryController.createSubCategory);
+router.post('/', verifyToken, checkRole('admin','coordinador'), validateSubcategory, subcategoryController.createSubCategory);
 router.get('/', subcategoryController.getSubCategories);
 router.get('/:id', subcategoryController.getSubCategoryById);
-router.put('/:id', verifyToken, checkRole(['admin','coordinador']), validateSubcategory, subcategoryController.updateSubCategory);
-router.delete('/:id', verifyToken, checkRole(['admin']), subcategoryController.deleteSubCategory);
+router.put('/:id', verifyToken, checkRole('admin','coordinador'), validateSubcategory, subcategoryController.updateSubCategory);
+router.delete('/:id', verifyToken, checkRole('admin'), subcategoryController.deleteSubCategory);
 
 // --- rutas de productos ----------------------------------------------------
 const productController = require('../controllers/productController');

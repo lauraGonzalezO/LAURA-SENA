@@ -53,15 +53,15 @@ const verifyTokenFn = (req, res, next) => {
         let token = null;
 
         //formato authorization
-        if (req.header.authorization && req.header.authorization.startsWith('Bearer ')) {
+        if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
 
             //extraer token quitando el beader
-            token = req.header.authorization.substring(7);
+            token = req.headers.authorization.substring(7);
         }
 
         // formato access-token
-        else if (req.header['x-access-token']) {
-            token = req.header['x-access-token'];
+        else if (req.headers['x-access-token']) {
+            token = req.headers['x-access-token'];
         }
 
         //si no encuentro token retorno la solicitud

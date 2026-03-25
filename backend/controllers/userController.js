@@ -34,9 +34,9 @@ exports.getAllUsers = async (req, res) => {
 
         let users;
         //control de acceso basado en el rol 
-        if (req.user.role === 'auxiliar') {
+        if (req.userRole === 'auxiliar') {
             // Los auxiliares solo pueden ver su propio perfil
-            users = await User.find({ _id: req.user._id, ...activeFilter }).select('-password');
+            users = await User.find({ _id: req.userId, ...activeFilter }).select('-password');
         } else {
             // Los admin y coordinadores pueden ver todos los usuarios 
             users = await User.find(activeFilter).select('-password');
@@ -71,14 +71,14 @@ exports.getUserById = async (req, res) => {
         }
 
         // Validaciones de acceso
-        if (req.user.role === 'auxiliar' && req.user._id.toString() !== user._id.toString()) {
+        if (req.userRole === 'auxiliar' && req.userId.toString() !== user._id.toString()) {
             return res.status(403).json({
                 success: false,
                 message: 'No tienes permiso para ver este usuario'
             });
         }
 
-        if (req.user.role === 'coordinador' && user.role === 'admin') {
+        if (req.userRole === 'coordinador' && user.role === 'admin') {
             return res.status(403).json({
                 success: false,
                 message: 'No puedes ver usuarios admin'
@@ -145,14 +145,14 @@ exports.createUser = async (req, res) => {
 exports.updateUser = async (req, res) => {
     try {
         // Restricciones: auxiliar solo puede actualizar su propio perfil y no puede cambiar rol
-        if (req.user.role === 'auxiliar' && req.user._id.toString() !== req.params.id) {
+        if (req.userRole === 'auxiliar' && req.userId.toString() !== req.params.id) {
             return res.status(403).json({
                 success: false,
                 message: 'No tienes permiso para actualizar este usuario'
             });
         }
 
-        if (req.user.role === 'auxiliar' && req.body.role) {
+        if (req.userRole === 'auxiliar' && req.body.role) {
             return res.status(403).json({
                 success: false,
                 message: 'No tienes permiso para modificar tu rol'

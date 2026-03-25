@@ -40,7 +40,7 @@ exports.signin = async (req, res) => {
             });
         }
 
-        const user = await User.findOne({ username });
+        const user = await User.findOne({ username }).select('+password');
 
         if (!user) {
             return res.status(401).json({

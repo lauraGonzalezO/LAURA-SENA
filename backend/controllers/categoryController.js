@@ -132,8 +132,8 @@ exports.getCategoryById = async (req, res) => {
     // Por defecto solo las categorías activas
     // includeInactive=true permite ver desactivadas
 
-    const category = await Category.findById(req,params.id);
-    if(!Category){
+    const category = await Category.findById(req.params.id);
+    if(!category){
         return res.status(404).json({
             success:false,
             message: 'categoria no encontrada'
@@ -179,14 +179,14 @@ exports.updateCategory=async(req,res) => {
 
         // solo actualizar campos que fueron enviados
         if (name){
-            updateData.name = name-trim();
+            updateData.name = name.trim();
 
             // verificar si el nuevo nombre ya existe en categoria
             const existingCategory = await Category.findOne ({
                 name: updateData.name,
-                _id:{$ne: req.params.id} // asegura< que el nombre no sea el mismo
+                _id:{$ne: req.params.id} // asegura que el nombre no sea el mismo
             });
-            if(existing){
+            if(existingCategory){
                 return res.status(400).json({
                     success: false,
                     message: 'este usuario ya existe'
@@ -199,8 +199,7 @@ exports.updateCategory=async(req,res) => {
         }
 
         // Actualizar la categoria en la base de datos
-        const UdpateCategory= await Category.
-        findByIdandUpdate (
+        const updatedCategory = await Category.findByIdAndUpdate(
         req.params.id,
         updateData,
         { new: true, runValidators:true}
@@ -264,14 +263,14 @@ exports.deleteCategory = async (req, res) => {
 
         //buscar la categoria a eliminar
         const category = await Category.findById(req.params.id);
-        if (!Category) {
+        if (!category) {
             return res.status(404).json({
                 success: false,
                 message: 'categoria no encontrada'
             });
 
         }
-        if(hardDelete){
+        if(isHardDelete){
             //eliminar en cascada subcategorias y prodcutyos relacionados
             // paso 1 obtener IDs de todas las subcategorias relacionadas
 
@@ -279,8 +278,8 @@ exports.deleteCategory = async (req, res) => {
                 category: req.params.id})).map(s =>s.id);
                 //paso 2 eliminar todos los productos
 
-            await Product.deleteMany ({
-                category:req, params,id});
+            await Product.deleteMany({
+                category: req.params.id});
 
             //paso 3 eliminar todos los productos 
             // de las subcategorias de esta categoria
@@ -294,7 +293,7 @@ exports.deleteCategory = async (req, res) => {
             });
 
             //paso 5 eliminar misma categoria
-            await Category.findByIdandDelete(req.params.id);
+            await Category.findByIdAndDelete(req.params.id);
             res.status(200).json({ 
                 success: true,
                 message: 'Categoria eliminada permanentemente y sus subcategorias y productos relacionados',

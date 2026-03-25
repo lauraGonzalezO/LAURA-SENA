@@ -31,14 +31,15 @@ exports.createSubCategory = async (req, res) => {
   try {
     const { name, description, category} = req.body;
 
-    // validar que la categoria padre exista 
+    // validar que la categoria padre exista
 
-    const parentCategory = await Category.findById(Category);
-    if (!parentCategory);
-    return res.status(404).json /({
-        success: false,
-        message: 'la categoria no existe'
-    });
+    const parentCategory = await Category.findById(category);
+    if (!parentCategory) {
+        return res.status(404).json({
+            success: false,
+            message: 'la categoria no existe'
+        });
+    }
 
     // Crear nueva subcategoría
     const newSubCategory = new SubCategory({
@@ -46,7 +47,7 @@ exports.createSubCategory = async (req, res) => {
       description: description.trim(),
       category: category
     });
-    await newCategory.save();
+    await newSubCategory.save();
     res.status(201).json({
       success: true,
       message: 'SubCategoría creada exitosamente',
@@ -118,8 +119,7 @@ exports.getSubCategoryById = async (req, res) => {
     // Por defecto solo las subcategorías activas
     // includeInactive=true permite ver desactivadas
 
-    const subcategory = await SubCategory.findById
-    (req,params.id).populate('category','name');
+    const subcategory = await SubCategory.findById(req.params.id).populate('category','name');
     if(!subcategory){
         return res.status(404).json({
             success:false,
@@ -168,28 +168,25 @@ exports.updateSubCategory=async(req,res) => {
             const parentCategory = await Category.
             findById(category);
             if (!parentCategory){
-                return res.stattus(400).json ({
+                return res.status(400).json({
                     success: false, 
                     message: 'la categoria no existe'
                 });
             }
         }
 //  contruir objeto de actualizacvon solo con cmapos enviados
-        const UdpateSubCategory= await SubCategory.
-        findByIdandUpdate (
+        const updatedSubCategory = await SubCategory.findByIdAndUpdate(
         req.params.id,
         { 
-            name: name ? name.trim ():
-            undefined,
-            description: description ? 
-            description.trim(): undefined,
+            name: name ? name.trim() : undefined,
+            description: description ? description.trim() : undefined,
             category
         },
         {new: true, runValidators:true}
         );
 
 
-        if(!updateSubCategory){
+        if(!updatedSubCategory){
             return res.status(404).json ({
                 success: false,
                 message: 'Subcategoria no encontrada'
@@ -197,10 +194,10 @@ exports.updateSubCategory=async(req,res) => {
         
         }
 
-        res.status(200).json ({
+        res.status(200).json({
             success:true,
             message: 'SubCategoria actualizada existosamente',
-            data: updateSubCategory
+            data: updatedSubCategory
         });
 
     } catch(error){
@@ -240,24 +237,23 @@ exports.deleteSubCategory = async (req, res) => {
 
 
         //buscar la subcategoria a eliminar
-        const Subcategory = await SubCategory.
-        findById(req.params.id);
-        if (!SubCategory) {
+        const subcategory = await SubCategory.findById(req.params.id);
+        if (!subcategory) {
             return res.status(404).json({
                 success: false,
-                message: 'categoria no encontrada'
+                message: 'subcategoria no encontrada'
             });
 
         }
-        if(hardDelete){
+        if(isHardDelete){
             //eliminar en cascada subcategoria y prodcutyos relacionados
             // paso 1 obtener IDs de todas los prodcutos  relacionadas
 
-            await product.deleteMany ({
-                subcategory:req.params.id});
-            //paso 2 eliminar todos los productos 
+            await Product.deleteMany({
+                subcategory: req.params.id});
+            //paso 2 eliminar la subcategoria
             
-            await Subcategory.findByIdandDelete (req.params.id);
+            await SubCategory.findByIdAndDelete(req.params.id);
 
             return res.status(200).json({
                 success: true,
@@ -267,10 +263,23 @@ exports.deleteSubCategory = async (req, res) => {
 
                 }
             });         
-        } 
+        } else {
+            // SOFT DELETE: solo marcar como inactiva
+            const updatedSubCategory = await SubCategory.findByIdAndUpdate(
+                req.params.id,
+                { active: false },
+                { new: true }
+            );
+
+            return res.status(200).json({
+                success: true,
+                message: 'SubCategoria desactivada',
+                data: updatedSubCategory
+            });
+        }
     } catch (error) {
 
-        console.error('Error en deleteCategory:', error)
+        console.error('Error en deleteSubCategory:', error)
         res.status(500).json({
             success: false,
             message: 'Error al desactivar la categoria',
